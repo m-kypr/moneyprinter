@@ -1,1 +1,6 @@
-requests
+google-api-python-client
+google-auth-oauthlib
+python-twitch-client 
+moviepy
+natsort
+google-auth
