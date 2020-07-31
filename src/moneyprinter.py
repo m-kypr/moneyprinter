@@ -51,7 +51,7 @@ def tw(client, channel):
     if os.path.isfile('clips.tmp'):
         clips = json.loads(open('clips.tmp', 'r').read())['clips']
     else:
-        clips = client.clips.get_top(channel=channel, limit=25)
+        clips = client.clips.get_top(channel=channel, limit=25, period='day')
         open('clips.tmp', 'w').write(json.dumps(
             {'clips': clips}, indent=4, sort_keys=True, default=str))
     for c in clips:
@@ -94,7 +94,7 @@ try:
 except FileExistsError:
     pass
 channels = ['xqcow', 'pokimane', 'loserfruit',
-            'loeya', 'kittyplays', 'itshafu', 'OMGitsfirefoxx', 'Rubius', 'auronplay', 'TheRealKnossi']
+            'loeya', 'kittyplays', 'itshafu', 'Asmongold', 'nickmercs', 'sodapoppin', 'Rubius', 'auronplay', 'TheRealKnossi']
 client = TwitchClient(client_id='y57j7itk3vsy5m4urko0mwvjske7db')
-for channel in channels[1:]:
+for channel in channels[2:]:
     tw(client, channel)
