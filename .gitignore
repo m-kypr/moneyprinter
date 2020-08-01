@@ -1,8 +1,6 @@
 env/
 .vscode/
-dl/
 out/
 client_secrets.json
-*.tmp
 *.mp3
-
+tmp/

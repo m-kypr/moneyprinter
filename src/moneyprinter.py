@@ -1,4 +1,4 @@
-import glob
+import shutil
 from natsort import natsorted
 from moviepy.editor import concatenate_videoclips, VideoFileClip
 import uuid
@@ -7,6 +7,8 @@ import os
 import json
 import random
 import string
+import threading
+import time
 
 import googleapiclient.discovery
 from twitch import TwitchClient
@@ -14,13 +16,10 @@ from twitch import TwitchClient
 
 def downloadfile(name, url):
     r = requests.get(url)
-    print("****Connected****")
     f = open(name, 'wb')
-    print("Donloading.....")
     for chunk in r.iter_content(chunk_size=255):
         if chunk:  # filter out keep-alive new chunks
             f.write(chunk)
-    print("Done")
     f.close()
 
 
@@ -48,27 +47,32 @@ def columbine(path, output):
 
 
 def tw(client, channel):
-    if os.path.isfile('clips.tmp'):
-        clips = json.loads(open('clips.tmp', 'r').read())['clips']
+    tmp = os.path.join('tmp', channel)
+    tmp_clips = os.path.join(tmp, 'clips')
+    try:
+        os.mkdir(tmp)
+    except FileExistsError:
+        pass
+    if os.path.isfile(tmp_clips):
+        clips = json.loads(open(tmp_clips, 'r').read())['clips']
     else:
-        clips = client.clips.get_top(channel=channel, limit=25, period='day')
-        open('clips.tmp', 'w').write(json.dumps(
-            {'clips': clips}, indent=4, sort_keys=True, default=str))
+        clips = client.clips.get_top(channel=channel, limit=25)
+        open(tmp_clips, 'w').write(json.dumps(
+            {'clips': clips}, default=str))
     for c in clips:
         path = "".join([a for a in c['title'] if a.isalpha()
                         or a.isdigit() or a == ' ']).rstrip()
-        path = os.path.join('dl', path) + '.mp4'
+        path = path + '.mp4'
+        path = os.path.join(tmp, path)
         if not os.path.isfile(path):
             url = rchop(c['thumbnails']['medium'],
                         '-preview-480x272.jpg') + '.mp4'
             print(url)
             downloadfile(path, url)
 
-    columbine('dl/', os.path.join('out', channel + '.mp4'))
-    os.remove('clips.tmp')
-    files = glob.glob('dl/*')
-    for f in files:
-        os.remove(f)
+    columbine(tmp, os.path.join('out', channel + '.mp4'))
+    time.sleep(5)
+    shutil.rmtree(tmp)
 
 
 def yt():
@@ -86,15 +90,22 @@ def yt():
 
 
 try:
-    os.mkdir('dl')
-except FileExistsError:
-    pass
-try:
     os.mkdir('out')
 except FileExistsError:
     pass
+try:
+    os.mkdir('tmp')
+except FileExistsError:
+    pass
 channels = ['xqcow', 'pokimane', 'loserfruit',
-            'loeya', 'kittyplays', 'itshafu', 'Asmongold', 'nickmercs', 'sodapoppin', 'Rubius', 'auronplay', 'TheRealKnossi']
+            'loeya', 'itshafu', 'Asmongold', 'nickmercs', 'sodapoppin', 'rubius', 'TheRealKnossi']
 client = TwitchClient(client_id='y57j7itk3vsy5m4urko0mwvjske7db')
-for channel in channels[2:]:
-    tw(client, channel)
+threads = []
+channels.reverse()
+for channel in channels:
+    threads.append(threading.Thread(target=tw, args=(client, channel, )))
+    threads[-1].start()
+    time.sleep(5)
+
+for t in threads:
+    t.join()
