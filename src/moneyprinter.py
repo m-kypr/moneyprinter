@@ -53,7 +53,7 @@ def columbine(path, output):
         output, fps=24, logger=None, write_logfile=False)
 
 
-def tw(client, channel):
+def tw(pid, client, channel):
     log = os.path.join('log', channel)
     tmp = os.path.join('tmp', channel)
     tmp_clips = os.path.join(tmp, 'clips')
@@ -98,6 +98,7 @@ def tw(client, channel):
     start = time.time()
     shutil.rmtree(tmp)
     print(' : ' + str(time.time() - start))
+    del ts[pid]
 
 
 def yt():
@@ -133,12 +134,12 @@ ts = []
 for channel in channels:
     while True:
         if len(ts) < THREADS:
+            pid = len(ts)
             ts.append(threading.Thread(
-                target=tw, args=(client, channel, )))
+                target=tw, args=(pid, client, channel, )))
             ts[-1].start()
             break
         time.sleep(5)
 
 for t in ts:
     t.join()
-    ts.remove(t)
