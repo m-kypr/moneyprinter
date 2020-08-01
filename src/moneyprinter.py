@@ -16,8 +16,10 @@ import googleapiclient.discovery
 from twitch import TwitchClient
 
 
-THREADS = 3
+LIMIT = 25
 
+THREADS = 3
+THREADING = False
 
 if len(sys.argv) > 1:
     THREADS = int(sys.argv[1])
@@ -53,7 +55,7 @@ def columbine(path, output):
         output, fps=24, logger=None, write_logfile=False)
 
 
-def tw(pid, client, channel):
+def tw(client, channel, pid=None):
     log = os.path.join('log', channel)
     tmp = os.path.join('tmp', channel)
     tmp_clips = os.path.join(tmp, 'clips')
@@ -73,7 +75,7 @@ def tw(pid, client, channel):
     else:
         print('**downloading top clips meta info**', end='')
         start = time.time()
-        clips = client.clips.get_top(channel=channel, limit=1)
+        clips = client.clips.get_top(channel=channel, limit=LIMIT)
         open(tmp_clips, 'w').write(json.dumps(
             {'clips': clips}, default=str))
         print(' : ' + str(time.time() - start))
@@ -98,7 +100,8 @@ def tw(pid, client, channel):
     start = time.time()
     shutil.rmtree(tmp)
     print(' : ' + str(time.time() - start))
-    del ts[pid]
+    if THREADING:
+        del ts[pid]
 
 
 def yt():
@@ -132,14 +135,18 @@ channels = ['xqcow', 'pokimane', 'loserfruit',
 client = TwitchClient(client_id='y57j7itk3vsy5m4urko0mwvjske7db')
 ts = []
 for channel in channels:
-    while True:
-        if len(ts) < THREADS:
-            pid = len(ts)
-            ts.append(threading.Thread(
-                target=tw, args=(pid, client, channel, )))
-            ts[-1].start()
-            break
-        time.sleep(5)
+    if THREADING:
+        while True:
+            if len(ts) < THREADS:
+                pid = len(ts)
+                ts.append(threading.Thread(
+                    target=tw, args=(client, channel, pid, )))
+                ts[-1].start()
+                break
+            time.sleep(5)
+    else:
+        tw(client, channel)
 
-for t in ts:
-    t.join()
+if THREADING:
+    for t in ts:
+        t.join()
