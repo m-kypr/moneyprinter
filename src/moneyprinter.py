@@ -207,5 +207,5 @@ if __name__ == "__main__":
         os.mkdir('log')
     except FileExistsError:
         pass
-    # twitch()
     reddit()
+    twitch()
