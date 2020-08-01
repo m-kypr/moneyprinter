@@ -50,7 +50,7 @@ def columbine(path, output):
 
     final_clip = concatenate_videoclips(L)
     final_clip.write_videofile(
-        output, fps=24, threads=4, logger=None, write_logfile=False)
+        output, fps=24, logger=None, write_logfile=False)
 
 
 def tw(client, channel):
@@ -73,7 +73,7 @@ def tw(client, channel):
     else:
         print('**downloading top clips meta info**', end='')
         start = time.time()
-        clips = client.clips.get_top(channel=channel, limit=25)
+        clips = client.clips.get_top(channel=channel, limit=1)
         open(tmp_clips, 'w').write(json.dumps(
             {'clips': clips}, default=str))
         print(' : ' + str(time.time() - start))
@@ -141,3 +141,4 @@ for channel in channels:
 
 for t in ts:
     t.join()
+    ts.remove(t)
