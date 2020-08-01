@@ -17,7 +17,18 @@ from twitch import TwitchClient
 
 
 LIMIT = 25
-
+channels = [
+        #'xqcow', 
+        'pokimane', 
+        #'loserfruit',
+        #'loeya', 
+        #'itshafu', 
+        #'Asmongold', 
+        #'nickmercs', 
+        'sodapoppin', 
+        'rubius', 
+        'TheRealKnossi'
+        ]
 THREADS = 3
 THREADING = False
 
@@ -133,8 +144,6 @@ try:
     os.mkdir('log')
 except FileExistsError:
     pass
-channels = ['xqcow', 'pokimane', 'loserfruit',
-            'loeya', 'itshafu', 'Asmongold', 'nickmercs', 'sodapoppin', 'rubius', 'TheRealKnossi']
 client = TwitchClient(client_id='y57j7itk3vsy5m4urko0mwvjske7db')
 ts = []
 for channel in channels:
