@@ -15,11 +15,14 @@ import googleapiclient.discovery
 from twitch import TwitchClient
 
 
+THREADS = 3
+
+
 def downloadfile(name, url):
     r = requests.get(url)
     f = open(name, 'wb')
     for chunk in r.iter_content(chunk_size=255):
-        if chunk:  # filter out keep-alive new chunks
+        if chunk:
             f.write(chunk)
     f.close()
 
@@ -32,10 +35,7 @@ def rchop(s, suffix):
 
 def columbine(path, output):
     L = []
-
     for root, dirs, files in os.walk(path):
-
-        # files.sort()
         files = natsorted(files)
         for file in files:
             if os.path.splitext(file)[1] == '.mp4':
@@ -44,22 +44,31 @@ def columbine(path, output):
                 L.append(video)
 
     final_clip = concatenate_videoclips(L)
-    final_clip.to_videofile(output, fps=24, remove_temp=False)
+    final_clip.write_videofile(
+        output, fps=24, threads=4, logger=None, write_logfile=False)
 
 
 def tw(client, channel):
+    log = os.path.join('log', channel)
     tmp = os.path.join('tmp', channel)
     tmp_clips = os.path.join(tmp, 'clips')
+
+    def print(str, end='\n'):
+        open(log, 'a').write(str + end)
+
     try:
         os.mkdir(tmp)
     except FileExistsError:
         pass
     if os.path.isfile(tmp_clips):
+        print('**loading clips from cache**')
         clips = json.loads(open(tmp_clips, 'r').read())['clips']
     else:
+        print('**downloading top clips meta info**')
         clips = client.clips.get_top(channel=channel, limit=25)
         open(tmp_clips, 'w').write(json.dumps(
             {'clips': clips}, default=str))
+    print('**downloading top clips**')
     for c in clips:
         path = "".join([a for a in c['title'] if a.isalpha()
                         or a.isdigit() or a == ' ']).rstrip()
@@ -68,11 +77,12 @@ def tw(client, channel):
         if not os.path.isfile(path):
             url = rchop(c['thumbnails']['medium'],
                         '-preview-480x272.jpg') + '.mp4'
-            print(url)
             downloadfile(path, url)
 
+    print('**combining clips**')
     columbine(tmp, os.path.join('out', channel + '.mp4'))
     time.sleep(5)
+    print('**deleting cache**')
     shutil.rmtree(tmp)
 
 
@@ -98,16 +108,22 @@ try:
     os.mkdir('tmp')
 except FileExistsError:
     pass
+try:
+    os.mkdir('log')
+except FileExistsError:
+    pass
 channels = ['xqcow', 'pokimane', 'loserfruit',
             'loeya', 'itshafu', 'Asmongold', 'nickmercs', 'sodapoppin', 'rubius', 'TheRealKnossi']
 client = TwitchClient(client_id='y57j7itk3vsy5m4urko0mwvjske7db')
-threads = []
-channels.reverse()
+ts = []
 for channel in channels:
-    if len(threads) < 7:
-        threads.append(threading.Thread(target=tw, args=(client, channel, )))
-        threads[-1].start()
-    time.sleep(5)
+    while True:
+        if len(ts) < THREADS:
+            ts.append(threading.Thread(
+                target=tw, args=(client, channel, )))
+            ts[-1].start()
+            break
+        time.sleep(5)
 
-for t in threads:
+for t in ts:
     t.join()

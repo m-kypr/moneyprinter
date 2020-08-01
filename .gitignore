@@ -5,3 +5,5 @@ client_secrets.json
 *.mp3
 tmp/
 youtube-upload-master/
+log/
+*.log
