@@ -10,12 +10,17 @@ import string
 import threading
 import time
 import praw
+import sys
 
 import googleapiclient.discovery
 from twitch import TwitchClient
 
 
 THREADS = 3
+
+
+if len(sys.argv) > 1:
+    THREADS = int(sys.argv[1])
 
 
 def downloadfile(name, url):
