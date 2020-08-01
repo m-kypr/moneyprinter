@@ -9,35 +9,32 @@ import random
 import string
 import threading
 import time
-import praw
 import sys
 
 import googleapiclient.discovery
 from twitch import TwitchClient
+from praw import Reddit
 
 
 LIMIT = 25
 channels = [
-        #'xqcow', 
-        'pokimane', 
-        #'loserfruit',
-        #'loeya', 
-        #'itshafu', 
-        #'Asmongold', 
-        #'nickmercs', 
-        'sodapoppin', 
-        'rubius', 
-        'TheRealKnossi'
-        ]
+    'xqcow',
+    'pokimane',
+    'loserfruit',
+    'loeya',
+    'itshafu',
+    'Asmongold',
+    'nickmercs',
+    'sodapoppin',
+    'rubius',
+    'TheRealKnossi'
+]
 THREADS = 3
 THREADING = False
-reddit_client = praw.Reddit(client_id='G0sWd3t4MfZuqg', client_secret="pI-xHd4HnMe8TXHXtIV_SHQH5ig",
-                            password='NCC1062A', user_agent='Mozilla/5.0',
-                            username='redditbantix')
+reddit_client = Reddit(client_id='G0sWd3t4MfZuqg', client_secret="pI-xHd4HnMe8TXHXtIV_SHQH5ig",
+                       user_agent='Mozilla/5.0')
 twitch_client = TwitchClient(client_id='y57j7itk3vsy5m4urko0mwvjske7db')
-
-if len(sys.argv) > 1:
-    THREADS = int(sys.argv[1])
+s = reddit_client.subreddit('xqcow')
 
 
 def downloadfile(name, url):
@@ -74,12 +71,15 @@ def columbine(path, output):
 
 
 def tw(client, channel, pid=None):
-    log = os.path.join('log', channel)
+    if THREADING:
+        log = os.path.join('log', channel)
+
+        def printlog(str, end='\n'):
+            open(log, 'a').write(str + end)
+
     tmp = os.path.join('tmp', channel)
     tmp_clips = os.path.join(tmp, 'clips')
 
-    def print(str, end='\n'):
-        open(log, 'a').write(str + end)
     try:
         os.mkdir(tmp)
     except FileExistsError:
@@ -96,18 +96,7 @@ def tw(client, channel, pid=None):
         open(tmp_clips, 'w').write(json.dumps(
             {'clips': clips}, default=str))
         print(' : ' + str(time.time() - start))
-    print('**downloading top clips**', end='')
-    start = time.time()
-    for c in clips:
-        path = "".join([a for a in c['title'] if a.isalpha()
-                        or a.isdigit() or a == ' ']).rstrip()
-        path = path + '.mp4'
-        path = os.path.join(tmp, path)
-        if not os.path.isfile(path):
-            url = rchop(c['thumbnails']['medium'],
-                        '-preview-480x272.jpg') + '.mp4'
-            downloadfile(path, url)
-    print(' : ' + str(time.time() - start))
+    dlClips(clips, tmp)
     print('**combining clips**', end='')
     start = time.time()
     columbine(tmp, os.path.join('out', channel + '.mp4'))
@@ -135,14 +124,29 @@ def yt():
     print(response)
 
 
+def dlClips(clips, tmp):
+    print('**downloading top clips**', end='')
+    start = time.time()
+    for c in clips:
+        path = "".join([a for a in c['title'] if a.isalpha()
+                        or a.isdigit() or a == ' ']).rstrip()
+        path = path + '.mp4'
+        path = os.path.join(tmp, path)
+        if not os.path.isfile(path):
+            url = rchop(c['thumbnails']['medium'],
+                        '-preview-480x272.jpg') + '.mp4'
+            downloadfile(path, url)
+    print(' : ' + str(time.time() - start))
+
+
 def reddit(subreddit='LivestreamFail'):
     tmp = os.path.join('tmp', subreddit)
     tmp_clips = os.path.join(tmp, 'clips')
+
     try:
         os.mkdir(tmp)
     except FileExistsError:
         pass
-
     if os.path.isfile(tmp_clips):
         print('**loading clips from cache**', end='')
         start = time.time()
@@ -159,42 +163,17 @@ def reddit(subreddit='LivestreamFail'):
         open(tmp_clips, 'w').write(json.dumps(
             {'clips': clips}, default=str))
         print(' : ' + str(time.time() - start))
-    print('**downloading top clips**', end='')
-    start = time.time()
-    for c in clips:
-        path = "".join([a for a in c['title'] if a.isalpha()
-                        or a.isdigit() or a == ' ']).rstrip()
-        path = path + '.mp4'
-        path = os.path.join(tmp, path)
-        if not os.path.isfile(path):
-            url = rchop(c['thumbnails']['medium'],
-                        '-preview-480x272.jpg') + '.mp4'
-            downloadfile(path, url)
-    print(' : ' + str(time.time() - start))
+    dlClips(clips, tmp)
     print('**combining clips**', end='')
     start = time.time()
     columbine(tmp, os.path.join('out', subreddit + '.mp4'))
     print(' : ' + str(time.time() - start))
-    # print(top)
 
 
-def doTwitch():
-    try:
-        os.mkdir('out')
-    except FileExistsError:
-        pass
-    try:
-        os.mkdir('tmp')
-    except FileExistsError:
-        pass
-    try:
-        os.mkdir('log')
-    except FileExistsError:
-        pass
-    channels = ['xqcow', 'pokimane', 'loserfruit',
-                'loeya', 'itshafu', 'Asmongold', 'nickmercs', 'sodapoppin', 'rubius', 'TheRealKnossi']
-    ts = []
+def twitch():
     print('THREADING: '+str(THREADING))
+    if THREADING:
+        ts = []
     for channel in channels:
         if THREADING:
             while True:
@@ -213,16 +192,20 @@ def doTwitch():
             t.join()
 
 
-try:
-    os.mkdir('out')
-except FileExistsError:
-    pass
-try:
-    os.mkdir('tmp')
-except FileExistsError:
-    pass
-try:
-    os.mkdir('log')
-except FileExistsError:
-    pass
-reddit()
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        THREADS = int(sys.argv[1])
+    try:
+        os.mkdir('out')
+    except FileExistsError:
+        pass
+    try:
+        os.mkdir('tmp')
+    except FileExistsError:
+        pass
+    try:
+        os.mkdir('log')
+    except FileExistsError:
+        pass
+    # twitch()
+    reddit()
