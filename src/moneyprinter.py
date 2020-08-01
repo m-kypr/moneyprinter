@@ -62,13 +62,18 @@ def tw(client, channel):
         pass
     if os.path.isfile(tmp_clips):
         print('**loading clips from cache**')
+        start = time.time()
         clips = json.loads(open(tmp_clips, 'r').read())['clips']
+        print(' : ' + str(time.time() - start), end='')
     else:
         print('**downloading top clips meta info**')
+        start = time.time()
         clips = client.clips.get_top(channel=channel, limit=25)
         open(tmp_clips, 'w').write(json.dumps(
             {'clips': clips}, default=str))
+        print(' : ' + str(time.time() - start), end='')
     print('**downloading top clips**')
+    start = time.time()
     for c in clips:
         path = "".join([a for a in c['title'] if a.isalpha()
                         or a.isdigit() or a == ' ']).rstrip()
@@ -78,12 +83,16 @@ def tw(client, channel):
             url = rchop(c['thumbnails']['medium'],
                         '-preview-480x272.jpg') + '.mp4'
             downloadfile(path, url)
-
+    print(' : ' + str(time.time() - start), end='')
     print('**combining clips**')
+    start = time.time()
     columbine(tmp, os.path.join('out', channel + '.mp4'))
+    print(' : ' + str(time.time() - start), end='')
     time.sleep(5)
     print('**deleting cache**')
+    start = time.time()
     shutil.rmtree(tmp)
+    print(' : ' + str(time.time() - start), end='')
 
 
 def yt():
