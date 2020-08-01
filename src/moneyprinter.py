@@ -53,6 +53,9 @@ def columbine(path, output):
     final_clip = concatenate_videoclips(L)
     final_clip.write_videofile(
         output, fps=24, logger=None, write_logfile=False)
+    for v in L:
+        v.close()
+    final_clip.close()
 
 
 def tw(client, channel, pid=None):
