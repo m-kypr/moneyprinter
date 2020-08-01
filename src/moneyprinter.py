@@ -17,7 +17,18 @@ from twitch import TwitchClient
 
 
 LIMIT = 25
-
+channels = [
+        #'xqcow', 
+        'pokimane', 
+        #'loserfruit',
+        #'loeya', 
+        #'itshafu', 
+        #'Asmongold', 
+        #'nickmercs', 
+        'sodapoppin', 
+        'rubius', 
+        'TheRealKnossi'
+        ]
 THREADS = 3
 THREADING = False
 reddit_client = praw.Reddit(client_id='G0sWd3t4MfZuqg', client_secret="pI-xHd4HnMe8TXHXtIV_SHQH5ig",
@@ -57,8 +68,8 @@ def columbine(path, output):
     final_clip = concatenate_videoclips(L)
     final_clip.write_videofile(
         output, fps=24, logger=None, write_logfile=False)
-    for video in L:
-        video.close()
+    for v in L:
+        v.close()
     final_clip.close()
 
 
