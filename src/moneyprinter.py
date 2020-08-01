@@ -9,6 +9,7 @@ import random
 import string
 import threading
 import time
+import praw
 
 import googleapiclient.discovery
 from twitch import TwitchClient
@@ -103,8 +104,9 @@ client = TwitchClient(client_id='y57j7itk3vsy5m4urko0mwvjske7db')
 threads = []
 channels.reverse()
 for channel in channels:
-    threads.append(threading.Thread(target=tw, args=(client, channel, )))
-    threads[-1].start()
+    if len(threads) < 7:
+        threads.append(threading.Thread(target=tw, args=(client, channel, )))
+        threads[-1].start()
     time.sleep(5)
 
 for t in threads:

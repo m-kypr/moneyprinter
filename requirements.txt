@@ -4,3 +4,4 @@ python-twitch-client
 moviepy
 natsort
 google-auth
+praw
