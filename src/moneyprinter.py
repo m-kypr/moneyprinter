@@ -15,22 +15,14 @@ import googleapiclient.discovery
 from twitch import TwitchClient
 from praw import Reddit
 
+DIR = os.path.dirname(os.path.realpath(__file__))
 
-LIMIT = 25
-channels = [
-    'xqcow',
-    'pokimane',
-    'loserfruit',
-    'loeya',
-    'itshafu',
-    'Asmongold',
-    'nickmercs',
-    'sodapoppin',
-    'rubius',
-    'TheRealKnossi'
-]
-THREADS = 3
-THREADING = False
+configdir = os.path.join(DIR, 'config.json')
+config = json.loads(open(configdir, 'r').read())
+CHANNELS = config['channels']
+LIMIT = config['limit']
+THREADS = config['threads']
+THREADING = bool(config['threading'])
 reddit_client = Reddit(client_id='G0sWd3t4MfZuqg', client_secret="pI-xHd4HnMe8TXHXtIV_SHQH5ig",
                        user_agent='Mozilla/5.0')
 twitch_client = TwitchClient(client_id='y57j7itk3vsy5m4urko0mwvjske7db')
@@ -174,7 +166,7 @@ def twitch():
     print('THREADING: '+str(THREADING))
     if THREADING:
         ts = []
-    for channel in channels:
+    for channel in CHANNELS:
         if THREADING:
             while True:
                 if len(ts) < THREADS:
