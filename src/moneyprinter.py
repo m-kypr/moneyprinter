@@ -84,7 +84,15 @@ def tw(client, channel, pid=None):
     else:
         print('**downloading top clips meta info**', end='')
         start = time.time()
-        clips = client.clips.get_top(channel=channel, limit=LIMIT)
+        length = 0
+        clips = []
+        clipsbuf = client.clips.get_top(channel=channel, limit=LIMIT)
+        for clip in clipsbuf:
+            if length < 600:
+                clips.append(clip)
+                length += int(clip['duration'])
+            else:
+                break
         open(tmp_clips, 'w').write(json.dumps(
             {'clips': clips}, default=str))
         print(' : ' + str(time.time() - start))
