@@ -88,7 +88,7 @@ def tw(client, channel, pid=None):
         clips = []
         clipsbuf = client.clips.get_top(channel=channel, limit=LIMIT)
         for clip in clipsbuf:
-            if length < 600:
+            if length < 660:
                 clips.append(clip)
                 length += int(clip['duration'])
             else:
