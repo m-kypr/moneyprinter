@@ -40,7 +40,7 @@ Instagram: http://instagram.com/{instagram_name}
 Thanks for watching! :D
 Subscribe for more clips of {nick}!
 
-#{name} #{nick} #{name}highlights #twitch #clips
+#{name} #{nick} #{name}highlights #twitch #clips #best of
 
 {nick},{name},{name}highlights,highlights,{nick}highlights,clips,best of
 
@@ -50,13 +50,32 @@ Subscribe for more clips of {nick}!
     return template
 
 
+def gen2(reddit, meta):
+    template = f"""Best r/{reddit} Compilation
+Source:
+https://www.reddit.com/r/{reddit}/
+
+#reddit #livestreamfail #fail #compilation #best of #clips
+
+{reddit},highlights,{reddit}highlights,clips,best of,compilation
+
+"""
+    return template
+
+
 metadir = os.path.join(DIR, 'meta.json')
 if not os.path.isfile(metadir):
     open(metadir, 'w+').write('{}')
 meta = json.loads(open(metadir, 'r').read())
+twitchmeta = meta['twitch']
+redditmeta = meta['reddit']
 configdir = os.path.join(DIR, 'config.json')
 config = json.loads(open(configdir, 'r').read())
 channels = config['channels']
 for channel in channels:
-    r = gen(channel, meta)
+    r = gen(channel, twitchmeta)
+    print(r)
+
+for reddit in config['reddits']:
+    r = gen2(reddit, redditmeta)
     print(r)

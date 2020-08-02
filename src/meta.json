@@ -1,52 +1,55 @@
 {
-    "xqcow": {
-        "nick": "xqc",
-        "twitter_name": "xqcow",
-        "instagram_name": "xqcow1"
+    "twitch": {
+        "xqcow": {
+            "nick": "xqc",
+            "twitter_name": "xqcow",
+            "instagram_name": "xqcow1"
+        },
+        "pokimane": {
+            "nick": "poki",
+            "twitter_name": "pokimanelol",
+            "instagram_name": "pokimanelol"
+        },
+        "loserfruit": {
+            "nick": "fruit",
+            "twitter_name": "loserfruit",
+            "instagram_name": "loserfruit"
+        },
+        "loeya": {
+            "nick": "loeya",
+            "twitter_name": "loeya",
+            "instagram_name": "loeya"
+        },
+        "itshafu": {
+            "nick": "hafu",
+            "twitter_name": "itshafu",
+            "instagram_name": "itshafu"
+        },
+        "Asmongold": {
+            "nick": "asmon",
+            "twitter_name": "asmongold",
+            "instagram_name": "asmongold"
+        },
+        "nickmercs": {
+            "nick": "nick",
+            "twitter_name": "nickmercs",
+            "instagram_name": "nickmercs"
+        },
+        "sodapoppin": {
+            "nick": "soda",
+            "twitter_name": "sodapoppintv",
+            "instagram_name": "sodapoppintv"
+        },
+        "rubius": {
+            "nick": "rubius",
+            "twitter_name": "Rubiu5",
+            "instagram_name": "elrubiuswtf"
+        },
+        "TheRealKnossi": {
+            "nick": "Knossi",
+            "twitter_name": "therealknossi",
+            "instagram_name": "knossi"
+        }
     },
-    "pokimane": {
-        "nick": "poki",
-        "twitter_name": "pokimanelol",
-        "instagram_name": "pokimanelol"
-    },
-    "loserfruit": {
-        "nick": "fruit",
-        "twitter_name": "loserfruit",
-        "instagram_name": "loserfruit"
-    },
-    "loeya": {
-        "nick": "loeya",
-        "twitter_name": "loeya",
-        "instagram_name": "loeya"
-    },
-    "itshafu": {
-        "nick": "hafu",
-        "twitter_name": "itshafu",
-        "instagram_name": "itshafu"
-    },
-    "Asmongold": {
-        "nick": "asmon",
-        "twitter_name": "asmongold",
-        "instagram_name": "asmongold"
-    },
-    "nickmercs": {
-        "nick": "nick",
-        "twitter_name": "nickmercs",
-        "instagram_name": "nickmercs"
-    },
-    "sodapoppin": {
-        "nick": "soda",
-        "twitter_name": "sodapoppintv",
-        "instagram_name": "sodapoppintv"
-    },
-    "rubius": {
-        "nick": "rubius",
-        "twitter_name": "Rubiu5",
-        "instagram_name": "elrubiuswtf"
-    },
-    "TheRealKnossi": {
-        "nick": "Knossi",
-        "twitter_name": "therealknossi",
-        "instagram_name": "knossi"
-    }
+    "reddit": {}
 }
