@@ -54,7 +54,7 @@ def columbine(path, output):
                 video = VideoFileClip(filePath)
                 L.append(video)
 
-    final_clip = concatenate_videoclips(L)
+    final_clip = concatenate_videoclips(L, method='compose')
     final_clip.write_videofile(
         output, fps=24, logger=None, write_logfile=False)
     for v in L:
