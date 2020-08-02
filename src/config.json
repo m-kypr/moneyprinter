@@ -1,0 +1,6 @@
+{
+    "channels": ["xqcow", "pokimane", "loserfruit", "loeya", "itshafu", "Asmongold", "nickmercs", "sodapoppin", "rubius", "TheRealKnossi"],
+    "threads": 3,
+    "limit": 25,
+    "threading": 0
+}
