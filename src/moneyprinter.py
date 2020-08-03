@@ -172,9 +172,12 @@ def columbine(path, output, chat=False):
                     comments = chatters['comments']
                     txt = '\n'.join([c['message']['body'] for c in comments])
                     # print(txt)
-                    text = TextClip(method='caption', size='200x100', txt=txt, transparent=True, align='East').set_duration(
-                        comments[-1]['content_offset_seconds'] - comments[0]['content_offset_seconds'])
-                    video = CompositeVideoClip([text, video])
+                    duration = int(comments[-1]['content_offset_seconds'] -
+                                   comments[0]['content_offset_seconds']) - 1
+                    print(duration)
+                    text = TextClip(txt='foo', fontsize=12, color='white').set_position(
+                        ("right", "bottom")).set_duration(duration)
+                    video = CompositeVideoClip(clips=[text, video])
                 # print(video)
                 L.append(video)
 
@@ -242,7 +245,7 @@ def tw(client, channel, pid=None):
     print(str(time.time() - start), flush=True)
     print('**combining clips**', end=':', flush=True)
     start = time.time()
-    columbine(tmp, os.path.join('out', channel + '_twitch.mp4'), chat=True)
+    columbine(tmp, os.path.join('out', channel + '_twitch.mp4'), chat=False)
     print(str(time.time() - start))
     time.sleep(5)
     print('**deleting cache**', end=':', flush=True)
@@ -307,7 +310,7 @@ Subscribe for more clips of {nick}!
 
 
 def genreddit(reddit):
-    return f'Best r/{reddit} Compilation', f"""Source:
+    return f'(Best r/{reddit} Compilation)', f"""Source:
 https://www.reddit.com/r/{reddit}/
 
 # reddit #livestreamfail #fail #compilation #best of #clips""", f'{reddit},highlights,{reddit}highlights,clips,best of,compilation'
@@ -322,11 +325,12 @@ def youtube(category='22', privacyStatus='public'):
     from argparse import Namespace
     for subdir, dirs, files in os.walk('out'):
         for file in files:
+            filepath = os.path.join('out', file)
             buf = file.split('.')[0].split('_')
             name = buf[0]
-            if buf[1] is 'reddit':
+            if buf[1] == 'reddit':
                 title, description, tags = genreddit(name)
-            elif buf[1] is 'twitch':
+            elif buf[1] == 'twitch':
                 title, description, tags = gentwitch(name, twitchmeta)
             title = input(f'Title for {file}: ') + ' ' + title
             args = Namespace(
@@ -334,24 +338,23 @@ def youtube(category='22', privacyStatus='public'):
                 auth_host_port=[8080, 8090],
                 category=category,
                 description=description,
-                file=file,
+                file=filepath,
                 keywords=tags,
                 logging_level='ERROR',
                 noauth_local_webserver=False,
                 privacyStatus=privacyStatus,
                 title=title
             )
-            print(args)
-            quit()
             youtube = get_authenticated_service(args)
             try:
                 initialize_upload(youtube, args)
             except HttpError as e:
                 print("An HTTP error %d occurred:\n%s" %
                       (e.resp.status, e.content))
+            os.remove(filepath)
 
 
-def reddit(subreddit='LivestreamFail', chat=True):
+def reddit(subreddit='LivestreamFail', chat=False):
     tmp = os.path.join('tmp', subreddit)
     tmp_clips = os.path.join(tmp, 'clips')
     try:
@@ -440,6 +443,6 @@ if __name__ == "__main__":
         os.mkdir('log')
     except FileExistsError:
         pass
-    reddit()
-    # twitch()
+    # reddit()
+    twitch()
     youtube()
