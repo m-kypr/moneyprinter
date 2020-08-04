@@ -236,12 +236,16 @@ def tw(client, channel, pid=None):
         path = os.path.join(tmp, "".join([a for a in clip['title'] if a.isalpha()
                                           or a.isdigit() or a == ' ']).rstrip())
         if not os.path.isfile(path + '.mp4'):
-            vod = clip['vod']
-            comms = comments(TWITCH_CLIENT_ID, vod['id'], vod['offset'])
+            if clip['vod']:
+                vod = clip['vod']
+                comms = comments(
+                    TWITCH_CLIENT_ID,
+                    vod['id'],
+                    vod['offset'])
+                open(path + '.json', 'w').write(json.dumps(comms))
             url = rchop(clip['thumbnails']['medium'],
                         '-preview-480x272.jpg') + '.mp4'
             downloadfile(path + '.mp4', url)
-            open(path + '.json', 'w').write(json.dumps(comms))
     print(str(time.time() - start), flush=True)
     print('**combining clips**', end=':', flush=True)
     start = time.time()
