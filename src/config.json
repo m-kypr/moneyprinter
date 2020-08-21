@@ -1,8 +1,20 @@
 {
-    "channels": ["xqcow", "pokimane", "loserfruit", "loeya", "itshafu", "Asmongold", "sodapoppin", "rubius", "TheRealKnossi"],
-    "reddits": ["LivestreamFail"],
+    "channels": [
+        "xqcow",
+        "pokimane",
+        "loserfruit",
+        "loeya",
+        "itshafu",
+        "Asmongold",
+        "sodapoppin",
+        "rubius",
+        "TheRealKnossi"
+    ],
+    "reddits": [
+        "LivestreamFail"
+    ],
     "threads": 3,
-    "videolength": 630,
+    "videolength": 120,
     "limit": 25,
     "threading": 0,
     "twitch_client_id": "y57j7itk3vsy5m4urko0mwvjske7db"

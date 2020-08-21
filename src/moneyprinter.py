@@ -23,6 +23,10 @@ import googleapiclient.discovery
 from twitch import TwitchClient
 from praw import Reddit
 
+DEBUG = True
+
+# DONT CHANGE ANYTHING BELOW THIS LINE
+
 DIR = os.path.dirname(os.path.realpath(__file__))
 
 configdir = os.path.join(DIR, 'config.json')
@@ -158,12 +162,16 @@ def rchop(s, suffix):
 
 
 def columbine(path, output, chat=False):
+    start_time = time.time()
+    if DEBUG:
+        print(f'chat={chat}', end=';', flush=True)
     L = []
     for root, dirs, files in os.walk(path):
         files = natsorted(files)
         for file in files:
             if os.path.splitext(file)[1] == '.mp4':
-                print(file)
+                if DEBUG:
+                    print(file, end=',', flush=True)
                 filePath = os.path.join(root, file)
                 video = VideoFileClip(filePath)
                 if chat:
@@ -180,11 +188,19 @@ def columbine(path, output, chat=False):
                     video = CompositeVideoClip(clips=[text, video])
                 # print(video)
                 L.append(video)
+    if DEBUG:
+        print(f'==> {len(L)} clips;', flush=True)
 
-    print(L)
+    if DEBUG:
+        print('concatenating', end=":", flush=True)
     final_clip = concatenate_videoclips(L, method='compose')
+    if DEBUG:
+        print(f'{int(time.time() - start_time)}s', end=';', flush=True)
+        print('writing', end=":", flush=True)
     final_clip.write_videofile(
         output, fps=24, logger=None, write_logfile=False)
+    if DEBUG:
+        print(f'{int(time.time() - start_time)}s', end=';', flush=True)
     for v in L:
         v.close()
     final_clip.close()
@@ -196,7 +212,7 @@ def comments(client_id, videoid, offset):
     return r
 
 
-def tw(client, channel, pid=None):
+def tw(client, channel, chat=False, pid=None):
     if THREADING:
         log = os.path.join('log', channel)
 
@@ -211,16 +227,18 @@ def tw(client, channel, pid=None):
     except FileExistsError:
         pass
     if os.path.isfile(tmp_clips):
-        print('**loading clips from cache**', end=':', flush=True)
+        print('**loading cached meta info**', end=':', flush=True)
         start = time.time()
         clips = json.loads(open(tmp_clips, 'r').read())['clips']
-        print(str(time.time() - start))
+        print(f'{int(time.time() - start)}s', flush=True)
     else:
-        print('**downloading top clips meta info**', end=':', flush=True)
+        print('**downloading meta info**', end=':', flush=True)
         start = time.time()
         length = 0
         clips = []
         clipsbuf = client.clips.get_top(channel=channel, limit=LIMIT)
+        if DEBUG:
+            print(f'Output length={VIDEOLENGTH/60}min', end=':', flush=True)
         for clip in clipsbuf:
             if length < VIDEOLENGTH:
                 clips.append(clip)
@@ -229,7 +247,7 @@ def tw(client, channel, pid=None):
                 break
         open(tmp_clips, 'w').write(json.dumps(
             {'clips': clips}, default=str))
-        print(str(time.time() - start))
+        print(f'{int(time.time() - start)}s', flush=True)
     print('**downloading top clips**', end=':', flush=True)
     start = time.time()
     for clip in clips:
@@ -246,16 +264,16 @@ def tw(client, channel, pid=None):
             url = rchop(clip['thumbnails']['medium'],
                         '-preview-480x272.jpg') + '.mp4'
             downloadfile(path + '.mp4', url)
-    print(str(time.time() - start), flush=True)
+    print(f'{int(time.time() - start)}s', flush=True)
     print('**combining clips**', end=':', flush=True)
     start = time.time()
-    columbine(tmp, os.path.join('out', channel + '_twitch.mp4'), chat=False)
-    print(str(time.time() - start))
+    columbine(tmp, os.path.join('out', channel + '_twitch.mp4'), chat=chat)
+    print(f'{int(time.time() - start)}s', flush=True)
     time.sleep(5)
     print('**deleting cache**', end=':', flush=True)
     start = time.time()
     shutil.rmtree(tmp)
-    print(str(time.time() - start))
+    print(f'{int(time.time() - start)}s', flush=True)
     if THREADING:
         del ts[pid]
 
@@ -274,50 +292,58 @@ def get_authenticated_service(args):
                  http=credentials.authorize(httplib2.Http()))
 
 
-def gentwitch(name, meta):
-    write = False
-    try:
-        meta[name]
-    except KeyError as e:
-        meta[name] = {}
-    try:
-        nick = meta[name]['nick']
-    except KeyError as e:
-        nick = input(f'Nick name of {name}: ')
-        meta[name]['nick'] = nick
-        write = True
-    try:
-        twitter_name = meta[name]['twitter_name']
-    except KeyError as e:
-        twitter_name = input(f'Twitter name of {name}: ')
-        meta[name]['twitter_name'] = twitter_name
-        write = True
-    try:
-        instagram_name = meta[name]['instagram_name']
-    except KeyError as e:
-        instagram_name = input(f'Instagram name of {name}: ')
-        meta[name]['instagram_name'] = instagram_name
-        write = True
-    if write:
-        open(metadir, 'w').write(json.dumps(meta))
-    return f'({name} Top Twitch Clips)', f"""Follow {name}!
+class Gen():
+    @staticmethod
+    def reddit(r):
+        return [
+            f'(Best r/{reddit} Compilation)',
+            f"""
+        Source: https://www.reddit.com/r/{reddit}/ 
+        
+        # reddit #livestreamfail #fail #compilation #best of #clips""",
+            f'{reddit},highlights,{reddit}highlights,clips,best of,compilation'
+        ]
 
-Twitch: http://twitch.tv/{name}
-Twitter: http://twitter.com/{twitter_name}
-Instagram: http://instagram.com/{instagram_name}
-
-Thanks for watching! :D
-Subscribe for more clips of {nick}!
-
-# {name} #{nick} #{name}highlights #twitch #clips #best of
-    """, f'{nick},{name},{name}highlights,highlights,{nick}highlights,clips,best of'
-
-
-def genreddit(reddit):
-    return f'(Best r/{reddit} Compilation)', f"""Source:
-https://www.reddit.com/r/{reddit}/
-
-# reddit #livestreamfail #fail #compilation #best of #clips""", f'{reddit},highlights,{reddit}highlights,clips,best of,compilation'
+    @staticmethod
+    def twitch(name, meta):
+        write = False
+        try:
+            meta[name]
+        except KeyError as e:
+            meta[name] = {}
+        try:
+            nick = meta[name]['nick']
+        except KeyError as e:
+            nick = input(f'Nick name of {name}: ')
+            meta[name]['nick'] = nick
+            write = True
+        try:
+            twitter_name = meta[name]['twitter_name']
+        except KeyError as e:
+            twitter_name = input(f'Twitter name of {name}: ')
+            meta[name]['twitter_name'] = twitter_name
+            write = True
+        try:
+            instagram_name = meta[name]['instagram_name']
+        except KeyError as e:
+            instagram_name = input(f'Instagram name of {name}: ')
+            meta[name]['instagram_name'] = instagram_name
+            write = True
+        if write:
+            open(metadir, 'w').write(json.dumps(meta))
+        return [
+            f'({name} Top Twitch Clips)',
+            f"""Follow {name}!
+            
+            Twitch: http://twitch.tv/{name}
+            Twitter: http://twitter.com/{twitter_name}
+            Instagram: http://instagram.com/{instagram_name}
+            
+            Thanks for watching! :D
+            Subscribe for more clips of {nick}!
+            #{name} #{nick} #{name}highlights #twitch #clips #best of""",
+            f'{nick},{name},{name}highlights,highlights,{nick}highlights,clips,best of'
+        ]
 
 
 def youtube(category='22', privacyStatus='public'):
@@ -333,9 +359,9 @@ def youtube(category='22', privacyStatus='public'):
             buf = file.split('.')[0].split('_')
             name = buf[0]
             if buf[1] == 'reddit':
-                title, description, tags = genreddit(name)
+                title, description, tags = Gen.reddit(name)
             elif buf[1] == 'twitch':
-                title, description, tags = gentwitch(name, twitchmeta)
+                title, description, tags = Gen.twitch(name, twitchmeta)
             title = input(f'Title for {file}: ') + ' ' + title
             args = Namespace(
                 auth_host_name='localhost',
@@ -415,6 +441,8 @@ def twitch():
     if THREADING:
         ts = []
     for channel in CHANNELS:
+        if DEBUG:
+            print(f'channel: {channel}')
         if THREADING:
             while True:
                 if len(ts) < THREADS:
@@ -425,15 +453,18 @@ def twitch():
                     break
                 time.sleep(5)
         else:
-            tw(twitch_client, channel)
-
+            tw(twitch_client, channel, chat=False)
     if THREADING:
         for t in ts:
             t.join()
 
 
 if __name__ == "__main__":
+    usage = 'script <int> threads'
     if len(sys.argv) > 1:
+        if sys.argv[1] == 'help':
+            print(usage)
+            quit()
         THREADS = int(sys.argv[1])
     try:
         os.mkdir('out')
